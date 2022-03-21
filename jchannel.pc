@@ -1,0 +1,14 @@
+prefix="/usr/local"
+exec_prefix="${prefix}"
+libdir="${prefix}/lib"
+includedir="${prefix}/include"
+
+Name: jMixin
+Description: A library mixin some standard functionalities
+URL: https://github.com/me/jeffersonfr/jmixin
+Version: 0.0.1
+Requires: 
+Requires.private: 
+Cflags: -I"${includedir}" 
+Libs: -L"${libdir}" -ljmixin
+Libs.private: -L"${libdir}" -ljmixin
