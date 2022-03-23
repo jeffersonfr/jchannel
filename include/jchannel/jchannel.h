@@ -27,18 +27,25 @@ namespace jchannel {
     Unknown,
     BrokenPipe,
     NoData,
-    InvalidHandler
+    InvalidHandler,
+    Timeout
   };
+
+  std::ostream & operator << (std::ostream & out, Empty outputError) {
+    out << "[]";
+
+    return out;
+  }
 
   std::ostream & operator << (std::ostream & out, ChannelError outputError) {
     if (outputError == ChannelError::Unknown) {
-      out << "ChannelError [unknown]";
+      out << "[Unknown Error]";
     } else if (outputError == ChannelError::BrokenPipe) {
-      out << "ChannelError [broken pipe]";
+      out << "[Broken Pipe]";
     } else if (outputError == ChannelError::NoData) {
-      out << "ChannelError [unavailable data]";
+      out << "[Unavailable Data]";
     } else if (outputError == ChannelError::InvalidHandler) {
-      out << "ChannelError [invalid handler]";
+      out << "[Invalid Handler]";
     }
 
     return out;
@@ -51,12 +58,38 @@ namespace jchannel {
         mDescriptor = fd;
       }
 
+      Handler(Handler const & handler):
+        mDescriptor{handler.mDescriptor} {
+      }
+
+      Handler(Handler && handler):
+        mDescriptor{handler.mDescriptor} {
+          handler.mDescriptor = -1;
+      }
+
+      ~Handler() {
+      }
+
+      operator int () const noexcept {
+        return get_value();
+      }
+
       int get_value() const noexcept {
         return mDescriptor;
       }
 
-      operator int () const noexcept {
-        return mDescriptor;
+      bool duplicate(int fd) const noexcept {
+        int flags = fcntl(get_value(), F_GETFD);
+
+        if (flags < 0) {
+          return false;
+        }
+
+        return dup3(get_value(), fd, (flags & FD_CLOEXEC)?O_CLOEXEC:0) == fd;
+      }
+
+      void close() const noexcept {
+        ::close(get_value());
       }
 
       bool operator == (Handler const & rhs) const noexcept {
@@ -73,27 +106,6 @@ namespace jchannel {
 
   namespace details {
 
-    template <typename Channel>
-    struct StreamMode {
-
-      public:
-        StreamMode(std::unique_ptr<Channel> &channel):
-          mChannel{channel} {
-        }
-
-        std::unique_ptr<Channel> & get_channel() {
-          return mChannel;
-        }
-
-        Handler get_handler() {
-          return mChannel->get_handler();
-        }
-
-      private:
-        std::unique_ptr<Channel> &mChannel;
-
-    };
-
     class Input final {
 
       template <typename ...Args>
@@ -101,7 +113,7 @@ namespace jchannel {
 
       public:
         ~Input() {
-          close();
+          mHandler.close();
         }
 
         Handler const & get_handler() const noexcept {
@@ -163,11 +175,11 @@ namespace jchannel {
             } while (r < 0 and errno == EINTR);
 
             if (r == 0) {
-              // timeout: return error
+              return tl::unexpected{ChannelError::Timeout};
             }
 
             if (r < 0) {
-              // error:: return error
+              return tl::unexpected{ChannelError::Unknown};
             }
 
             return read<T>();
@@ -181,7 +193,7 @@ namespace jchannel {
           }
 
         void close() const noexcept {
-          ::close(mHandler);
+          mHandler.close();
         }
 
       private:
@@ -201,7 +213,7 @@ namespace jchannel {
 
       public:
         ~Output() {
-          close();
+          mHandler.close();
         }
 
         Handler const & get_handler() const noexcept {
@@ -261,11 +273,11 @@ namespace jchannel {
             } while (r < 0 and errno == EINTR);
 
             if (r == 0) {
-              // timeout: return error
+              return tl::unexpected{ChannelError::Timeout};
             }
 
             if (r < 0) {
-              // error:: return error
+              return tl::unexpected{ChannelError::Unknown};
             }
 
             return write(std::forward<T>(value));
@@ -279,7 +291,7 @@ namespace jchannel {
           }
 
         void close() const noexcept {
-          ::close(mHandler);
+          mHandler.close();
         }
 
       private:
@@ -299,9 +311,9 @@ namespace jchannel {
 
       int mCloseOnExec {0};
       int mNonBlocking {0};
-      bool mPacketMode {0};
+      int mPacketMode {0};
 
-      template <std::size_t Index>
+      template <std::size_t Index = 0>
         void _process_parameters(std::tuple<Empty, Params...> t)
         {
           using TupleType = decltype(t);
@@ -330,7 +342,7 @@ namespace jchannel {
         {
           std::tuple<Empty, Params...> t;
 
-          _process_parameters<0>(t);
+          _process_parameters(t);
 
           int fd[2];
 
@@ -376,8 +388,8 @@ namespace jchannel {
       class Polling {
 
         public:
-          Polling(F & callback, Args && ...args):
-            mCallback{callback}, mArgs{std::move(args)...}
+          Polling(F & callback, Args & ...args):
+            mCallback{callback}, mArgs{args...}
           {
             mEpoll = epoll_create1(EPOLL_CLOEXEC);
 
@@ -443,8 +455,8 @@ namespace jchannel {
               int fd = mEvents[i].data.fd;
 
               std::apply(
-                  [&]<typename ...fArgs>(fArgs && ...args) {
-                    for_each(fd, mCallback, std::forward<fArgs>(args)...);
+                  [&]<typename ...fArgs>(fArgs & ...args) {
+                    for_each(fd, mCallback, args...);
                   }, mArgs);
             }
 
@@ -454,23 +466,18 @@ namespace jchannel {
         private:
           struct CallbackRedirect {
 
-            F const  & mCallback;
+            F mCallback;
 
             void operator() (auto & arg) {
-              std::invoke(mCallback, std::forward<decltype(arg)>(arg));
+              std::invoke(mCallback, arg);
             }
-
-            template <typename Channel>
-              void operator() (std::unique_ptr<details::StreamMode<Channel>> & arg) {
-                std::invoke(mCallback, std::forward<decltype(arg)>(arg)->get_channel());
-              }
 
           };
 
           constexpr static const int ArgsSize = sizeof...(Args);
 
-          std::tuple<Args ...> mArgs;
-          CallbackRedirect const  & mCallback;
+          std::tuple<Args & ...> mArgs;
+          CallbackRedirect mCallback;
           int mEpoll {-1};
           struct epoll_event mEvents[sizeof...(Args)];
 
@@ -495,15 +502,6 @@ namespace jchannel {
             register_polling(e);
           }
 
-          void create_channel_poll(std::unique_ptr<details::StreamMode<details::Input>> & value) {
-            struct epoll_event e;
-
-            e.events = EPOLLIN;
-            e.data.fd = value->get_handler();
-
-            register_polling(e);
-          }
-
           void create_channel_poll(std::unique_ptr<details::Output> & value) {
             struct epoll_event e;
             bool packet {false};
@@ -519,15 +517,6 @@ namespace jchannel {
             register_polling(e);
           }
 
-          void create_channel_poll(std::unique_ptr<details::StreamMode<details::Output>> & value) {
-            struct epoll_event e;
-
-            e.events = EPOLLOUT;
-            e.data.fd = value->get_handler();
-
-            register_polling(e);
-          }
-
       };
 
   }
@@ -536,13 +525,8 @@ namespace jchannel {
   using Output = std::unique_ptr<details::Output>;
 
   template <typename F, typename ...Args>
-    auto poll(F callback, Args && ...args) {
-      return details::Polling{callback, std::move(args)...};
-    }
-
-  template <typename Channel>
-    auto as_stream(std::unique_ptr<Channel> & channel) {
-      return std::make_unique<details::StreamMode<Channel>>(channel);
+    auto poll(F callback, Args & ...args) {
+      return details::Polling{callback, args...};
     }
 
 }
