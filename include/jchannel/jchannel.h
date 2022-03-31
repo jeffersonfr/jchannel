@@ -442,7 +442,7 @@ namespace jchannel {
           }
 
           ~Polling() {
-            ::close(mEpoll);
+            close();
           }
 
           operator bool() {
