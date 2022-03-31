@@ -13,14 +13,10 @@ macro(module_test)
     PRIVATE
       jchannel
   )
-
-  target_compile_options(${ARGV0}_test
-    PRIVATE
-      -g3 -ggdb3
-    )
 endmacro()
 
 module_test(ctor)
+module_test(close)
 module_test(empty_poll)
 module_test(sigpipe)
 module_test(stress)
@@ -33,4 +29,5 @@ module_test(init_poll)
 module_test(stream_poll)
 module_test(packet_poll)
 module_test(multi_poll)
+module_test(interrupt)
 module_test(unreaded)

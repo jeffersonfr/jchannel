@@ -101,12 +101,40 @@ namespace jchannel {
 
   };
 
+  class IStream {
+
+    public:
+      virtual ~IStream() {
+      }
+
+      virtual Handler const & get_handler() const noexcept = 0;
+
+      virtual bool packet_mode_enabled() const noexcept = 0;
+
+  };
+
+  class IInput : public virtual IStream {
+
+    public:
+      virtual ~IInput() {
+      }
+
+  };
+
+  class IOutput : public virtual IStream {
+
+    public:
+      virtual ~IOutput() {
+      }
+
+  };
+
   template <typename ...Args>
     class Channel;
 
   namespace details {
 
-    class Input final {
+    class Input : public IInput {
 
       template <typename ...Args>
       friend class jchannel::Channel;
@@ -120,7 +148,7 @@ namespace jchannel {
           return mHandler;
         }
 
-        bool packet_mode_enabled() {
+        bool packet_mode_enabled() const noexcept {
           return mPacketMode;
         }
 
@@ -206,7 +234,7 @@ namespace jchannel {
 
     };
 
-    class Output final {
+    class Output : public IOutput {
 
       template <typename ...Args>
       friend class jchannel::Channel;
@@ -220,7 +248,7 @@ namespace jchannel {
           return mHandler;
         }
 
-        bool packet_mode_enabled() {
+        bool packet_mode_enabled() const noexcept {
           return mPacketMode;
         }
 
@@ -406,7 +434,7 @@ namespace jchannel {
             try {
               std::apply(
                   [&]<typename ...fArgs>(fArgs & ...args) {
-                    (create_channel_poll(args), ...);
+                    (create_channel_poll(args.get()), ...);
                   }, mArgs);
             } catch (...) {
               throw;
@@ -417,6 +445,10 @@ namespace jchannel {
             ::close(mEpoll);
           }
 
+          operator bool() {
+            return mEpoll >= 0;
+          }
+
           Polling & operator () () {
             int n;
 
@@ -425,6 +457,10 @@ namespace jchannel {
             } while (n < 0 and errno == EINTR);
 
             if (n < 0) {
+              if (mEpoll < 0) {
+                return *this;
+              }
+
               throw std::runtime_error("invalid descriptor");
             }
 
@@ -463,6 +499,14 @@ namespace jchannel {
             return *this;
           }
 
+          void close() {
+            if (mEpoll > 0) {
+              ::close(mEpoll);
+            }
+
+            mEpoll = -1;
+          }
+
         private:
           struct CallbackRedirect {
 
@@ -476,10 +520,10 @@ namespace jchannel {
 
           constexpr static const int ArgsSize = sizeof...(Args);
 
+          epoll_event mEvents[sizeof...(Args)];
           std::tuple<Args & ...> mArgs;
           CallbackRedirect mCallback;
           int mEpoll {-1};
-          struct epoll_event mEvents[sizeof...(Args)];
 
           void register_polling(struct epoll_event & event) {
             if (epoll_ctl(mEpoll, EPOLL_CTL_ADD, event.data.fd, &event) == -1) {
@@ -487,7 +531,7 @@ namespace jchannel {
             }
           }
 
-          void create_channel_poll(std::unique_ptr<details::Input> & value) {
+          void create_channel_poll(IInput * value) {
             struct epoll_event e;
             bool packet {false};
 
@@ -502,7 +546,7 @@ namespace jchannel {
             register_polling(e);
           }
 
-          void create_channel_poll(std::unique_ptr<details::Output> & value) {
+          void create_channel_poll(IOutput * value) {
             struct epoll_event e;
             bool packet {false};
 

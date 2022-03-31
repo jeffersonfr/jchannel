@@ -10,5 +10,5 @@ Version: 0.0.1
 Requires: @PKGCONF_REQ_PUB@
 Requires.private: @PKGCONF_REQ_PRIV@
 Cflags: -I"${includedir}" 
-Libs: -L"${libdir}" -ljmixin
-Libs.private: -L"${libdir}" -ljmixin
+Libs: 
+Libs.private:
