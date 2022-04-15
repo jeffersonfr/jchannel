@@ -1,15 +1,17 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 
-int main() {
-  using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-  Channel channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
+  protected:
+    jchannel::Channel<> mChannel;
+    jchannel::Input input = mChannel.get_input();
+    jchannel::Output output = mChannel.get_output();
 
+};
+
+TEST_F(ChannelSuite, InterruptPolling) {
   signal(SIGALRM,
       [](int sig) {
         exit(0);
@@ -34,10 +36,8 @@ int main() {
   if (p == true) {
     t.join();
 
-    return 1;
+    FAIL();
   }
 
   t.join();
-
-  return 0;
 }

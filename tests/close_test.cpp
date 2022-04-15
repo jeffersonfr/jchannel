@@ -1,28 +1,29 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
 
-int main() {
-  using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-  Channel channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
+  protected:
+    jchannel::Channel<jchannel::PacketMode> mChannel;
+    jchannel::Input input = mChannel.get_input();
+    jchannel::Output output = mChannel.get_output();
 
+};
+
+TEST_F(ChannelSuite, CloseChannel) {
   auto p = poll(
     [&](auto & in) mutable {
       assert(in == input);
     }, input, output);
 
   if (p == false) {
-    return 1;
+    FAIL();
   }
 
   p.close();
 
   if (p == true) {
-    return 1;
+    FAIL();
   }
-
-  return 0;
 }

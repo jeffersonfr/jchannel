@@ -1,21 +1,25 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
 
-int main() {
-  using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
+  protected:
+
+};
+
+TEST_F(ChannelSuite, PipeError) {
   signal(SIGPIPE,
       [](int sig) {
         exit(0);
       });
 
-  Channel<Empty> myChannel;
-  Input input = myChannel.get_input();
-  Output output = myChannel.get_output();
+  jchannel::Channel<jchannel::Empty> myChannel;
+  auto input = myChannel.get_input();
+  auto output = myChannel.get_output();
 
   input->close();
   output->write();
 
-  return 1;
+  FAIL();
 }

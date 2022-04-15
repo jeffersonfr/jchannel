@@ -1,13 +1,15 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
 
-int main() {
-  using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-  poll(
+  protected:
+
+};
+
+TEST_F(ChannelSuite, EmptyPoll) {
+  jchannel::poll(
     [](auto &&) {
     });
-
-  return 0;
 }

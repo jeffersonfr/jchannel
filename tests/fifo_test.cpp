@@ -1,15 +1,13 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
-
-using namespace jchannel;
+#include <gtest/gtest.h>
 
 class Fifo {
 
   public:
     Fifo() {
-      Channel channel1;
-      Channel channel2;
+      jchannel::Channel channel1;
+      jchannel::Channel channel2;
 
       input1 = channel1.get_input();
       output1 = channel1.get_output();
@@ -32,34 +30,33 @@ class Fifo {
     }
 
   private:
-    Input input1;
-    Output output1;
-    Input input2;
-    Output output2;
+    jchannel::Input input1;
+    jchannel::Output output1;
+    jchannel::Input input2;
+    jchannel::Output output2;
 
 };
 
-int main() {
 
+class ChannelSuite : public ::testing::Test {
+
+  protected:
+    Fifo mFifo;
+
+};
+
+TEST_F(ChannelSuite, Fifo) {
   auto now = std::chrono::steady_clock::now();
-
-  Fifo f;
 
   if (int id = fork(); id == 0) {
     std::this_thread::sleep_for(std::chrono::seconds{2});
 
-    f.read();
-
-    exit(0);
+    mFifo.read();
   } else if (id > 0) {
-    f.write();
+    mFifo.write();
 
     if (auto time = std::chrono::steady_clock::now() - now; time < std::chrono::seconds{2}) {
-      exit(1);
+      FAIL();
     }
-
-    exit(0);
   }
-
-  return 0;
 }

@@ -1,15 +1,17 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 
-using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-int main() {
-  Channel channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
+  protected:
+    jchannel::Channel<> mChannel;
+    jchannel::Input input = mChannel.get_input();
+    jchannel::Output output = mChannel.get_output();
 
+};
+
+TEST_F(ChannelSuite, PollChannel) {
   output->write();
   
   auto p = poll(
@@ -18,6 +20,4 @@ int main() {
     }, input);
 
   p();
-
-  return 0;
 }

@@ -1,26 +1,29 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 
-using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-int main() {
-  Channel ch1;
+  protected:
+
+};
+
+TEST_F(ChannelSuite, MultiPolling) {
+  jchannel::Channel ch1;
   auto in1 = ch1.get_input();
   auto out1 = ch1.get_output();
   
-  Channel ch2;
+  jchannel::Channel ch2;
   auto in2 = ch2.get_input();
   auto out2 = ch2.get_output();
 
-  Channel ch3;
+  jchannel::Channel ch3;
   auto in3 = ch3.get_input();
   auto out3 = ch3.get_output();
 
   out1->write();
 
-  auto p = poll(
+  auto p = jchannel::poll(
     [&](auto && in) {
       in->read();
 
@@ -35,5 +38,5 @@ int main() {
   p();
   p();
 
-  return 1;
+  FAIL();
 }

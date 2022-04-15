@@ -1,16 +1,19 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
-#include <cassert>
-
-using namespace jchannel;
+#include <gtest/gtest.h>
 
 const int MAX_ITERATIONS = 1000;
 
-int main() {
-  Channel channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
+class ChannelSuite : public ::testing::Test {
+
+  protected:
+    jchannel::Channel<jchannel::Empty> mChannel;
+
+};
+
+TEST_F(ChannelSuite, UnreadedData) {
+  auto input = mChannel.get_input();
+  auto output = mChannel.get_output();
   
   output->write();
 
@@ -25,7 +28,5 @@ int main() {
     p();
   }
 
-  assert(counter == MAX_ITERATIONS);
-
-  return 0;
+  EXPECT_EQ(counter, MAX_ITERATIONS);
 }

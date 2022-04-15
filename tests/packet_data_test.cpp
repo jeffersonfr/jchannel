@@ -1,15 +1,26 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
-#include <cassert>
+#include <gtest/gtest.h>
 
-using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-void using_exact_size() {
-  Channel<PacketMode> channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
+  protected:
+    jchannel::Channel<jchannel::PacketMode> mChannel;
+    jchannel::Input input = mChannel.get_input();
+    jchannel::Output output = mChannel.get_output();
 
+};
+
+class NonBlockingChannelSuite : public ::testing::Test {
+
+  protected:
+    jchannel::Channel<jchannel::PacketMode, jchannel::NonBlocking> mChannel;
+    jchannel::Input input = mChannel.get_input();
+    jchannel::Output output = mChannel.get_output();
+
+};
+
+TEST_F(ChannelSuite, UsingExactSize) {
   output->write(static_cast<int>(0x11223344));
   output->write('A');
   output->write(static_cast<long>(0x66778899aabbccdd));
@@ -19,11 +30,7 @@ void using_exact_size() {
   assert(input->read<long>().value() == 0x66778899aabbccdd);
 }
 
-void using_fragmented_size() {
-  Channel<PacketMode> channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
-
+TEST_F(ChannelSuite, UsingFragmentedSize) {
   output->write(static_cast<int>(0x11223344));
   output->write("Hello, world !");
   output->write(static_cast<long>(0x66778899aabbccdd));
@@ -34,24 +41,13 @@ void using_fragmented_size() {
   assert(input->read<short>().value() == static_cast<short>(0xccdd));
 }
 
-void reading_more_than_necessary_size() {
-  Channel<PacketMode, NonBlocking> channel;
-  auto input = channel.get_input();
-  auto output = channel.get_output();
-
+TEST_F(NonBlockingChannelSuite, ReadingMoreThanNecessarySize) {
   output->write(static_cast<int>(0x11223344));
 
   input->read<long>();
 
   if (input->read()) {
-    exit(1);
+    FAIL();
   }
 }
 
-int main() {
-  using_exact_size();
-  using_fragmented_size();
-  reading_more_than_necessary_size();
-
-  return 0;
-}

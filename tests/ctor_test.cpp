@@ -1,14 +1,16 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
 
-int main() {
-  using namespace jchannel;
+class ChannelSuite : public ::testing::Test {
 
-  Channel<NonBlocking> ch1;
-  Channel<CloseOnExec> ch2;
-  Channel<PacketMode> ch3;
-  Channel ch4;
+  protected:
+    jchannel::Channel<jchannel::NonBlocking> mNonBlocking;
+    jchannel::Channel<jchannel::CloseOnExec> mCloseOnExec;
+    jchannel::Channel<jchannel::PacketMode> mPacketMode;
+    jchannel::Channel<> mNone;
 
-  return 0;
+};
+
+TEST_F(ChannelSuite, Ctor) {
 }
