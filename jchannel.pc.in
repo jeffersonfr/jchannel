@@ -3,9 +3,9 @@ exec_prefix="${prefix}"
 libdir="${prefix}/lib"
 includedir="${prefix}/include"
 
-Name: jMixin
-Description: A library mixin some standard functionalities
-URL: https://github.com/me/jeffersonfr/jmixin
+Name: jchannel
+Description: A static channel implementation
+URL: https://github.com/me/jeffersonfr/jchannel
 Version: 0.0.1
 Requires: @PKGCONF_REQ_PUB@
 Requires.private: @PKGCONF_REQ_PRIV@

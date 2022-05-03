@@ -1,24 +1,22 @@
 #include "jchannel/jchannel.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
 
-using namespace jchannel;
+TEST(ChannelSuite, NonBlockingChannel) {
+  jchannel::Channel<jchannel::NonBlocking> channel;
+  auto input = channel.get_input();
 
-int main() {
-  Channel<NonBlocking> nonBlockingChannel;
-  auto nonBlockingInput = nonBlockingChannel.get_input();
-  auto rNonBlockingInput = nonBlockingInput->read();
-
-  if (!rNonBlockingInput) {
-    std::cout << rNonBlockingInput.error() << std::endl;
+  if (input->read()) {
+    FAIL();
   }
+}
 
-  Channel blockingChannel;
-  auto blockingInput = blockingChannel.get_input();
-  auto rBlockingInput = blockingInput->read_for(std::chrono::seconds{2});
+TEST(ChannelSuite, BlockingChannel) {
+  jchannel::Channel channel;
+  auto input = channel.get_input();
 
-  if (!rBlockingInput) {
-    std::cout << rBlockingInput.error() << std::endl;
+  if (input->read_for(std::chrono::seconds{2})) {
+    FAIL();
   }
 
   signal(SIGALRM,
@@ -28,7 +26,7 @@ int main() {
 
   alarm(2);
 
-  rBlockingInput = blockingInput->read();
+  input->read();
 
-  return 1;
+  FAIL();
 }

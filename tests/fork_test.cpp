@@ -3,15 +3,45 @@
 #include <iostream>
 #include <cassert>
 
+#include <gtest/gtest.h>
+
 using namespace jchannel;
 
-void fork_exec(auto && channel) {
+TEST(ChannelSuite, Channel) {
+  auto channel = Channel{};
   auto input = channel.get_input();
   auto output = channel.get_output();
 
   if (int id = fork(); id == 0) { // child
-    std::this_thread::sleep_for(std::chrono::seconds{2});
+    bool r = output->get_handler().duplicate(1);
 
+    char * const args[] = {
+      (char *)("/usr/bin/echo"),
+      (char *)("-n"),
+      (char *)("SOMEDATA"),
+      nullptr
+    };
+
+    execve(args[0], args, environ);
+
+    exit(0);
+  } else if (id > 0) {
+    struct result_t {
+      char data[256];
+    };
+
+    auto result = input->read<result_t>();
+
+    assert(std::string{result.value().data} == "SOMEDATA");
+  }
+}
+
+TEST(ChannelSuite, ChannelWithCloseOnExec) {
+  auto channel = Channel<CloseOnExec>{};
+  auto input = channel.get_input();
+  auto output = channel.get_output();
+
+  if (int id = fork(); id == 0) { // child
     bool r = output->get_handler().duplicate(1);
 
     char * const args[] = {
@@ -24,20 +54,13 @@ void fork_exec(auto && channel) {
 
     exit(0);
   } else if (id > 0) {
-    input->read();
+    struct result_t {
+      char data[256];
+    };
+
+    auto result = input->read_for(std::chrono::seconds{10});
+
+    assert(result.has_value() == false);
   }
 }
 
-int main() {
-  signal(SIGALRM,
-      [](int sig) {
-        exit(0);
-      });
-
-  alarm(10);
-
-  fork_exec(Channel{});
-  fork_exec(Channel<CloseOnExec>{});
-
-  return 1;
-}
