@@ -21,11 +21,11 @@ TEST_F(ChannelSuite, UsingExactSize) {
       static int i = 0;
 
       if (i == 0) {
-        assert(input->template read<int>().value() == 0x11223344);
+        ASSERT_EQ(input->template read<int>().value(), 0x11223344);
       } else if (i == 1) {
-        assert(input->template read<char>().value() == 'A');
+        ASSERT_EQ(input->template read<char>().value(), 'A');
       } else if (i == 2) {
-        assert(input->template read<long>().value() == 0x66778899aabbccdd);
+        ASSERT_EQ(input->template read<long>().value(), 0x66778899aabbccdd);
       }
 
       i++;
@@ -46,11 +46,11 @@ TEST_F(ChannelSuite, UsingFragmentedSize) {
       static int i = 0;
 
       if (i == 0) {
-        assert(input->template read<int>().value() == 0x11223344);
+        ASSERT_EQ(input->template read<int>().value(), 0x11223344);
       } else if (i == 1) {
-        assert(input->template read<char>().value() == 'H');
+        ASSERT_EQ(input->template read<char>().value(), 'H');
       } else if (i == 2) {
-        assert(input->template read<long>().value() == 0x66778899aabbccdd);
+        ASSERT_EQ(input->template read<long>().value(), 0x66778899aabbccdd);
       }
 
       i++;
@@ -66,7 +66,7 @@ TEST_F(ChannelSuite, ReadingMoreThanNecessarySize) {
 
   auto p = poll(
     [](auto && input) {
-      assert((input->template read<long>().value() & 0x00000000ffffffff) == 0x11223344);
+      ASSERT_EQ((input->template read<long>().value() & 0x00000000ffffffff), 0x11223344);
     }, input);
 
   p();

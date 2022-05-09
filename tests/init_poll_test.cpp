@@ -16,7 +16,7 @@ TEST_F(ChannelSuite, PollChannel) {
   
   auto p = poll(
     [&](auto & in) mutable {
-      assert(in == input);
+      ASSERT_EQ(in, input);
     }, input);
 
   p();

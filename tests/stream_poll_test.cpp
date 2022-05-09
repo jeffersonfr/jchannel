@@ -21,11 +21,11 @@ TEST_F(ChannelSuite, UsingExactSize) {
       static int i = 0;
 
       if (i == 0) {
-        assert(input->template read<int>().value() == 0x11223344);
+        ASSERT_EQ(input->template read<int>().value(), 0x11223344);
       } else if (i == 1) {
-        assert(input->template read<char>().value() == 'A');
+        ASSERT_EQ(input->template read<char>().value(), 'A');
       } else if (i == 2) {
-        assert(input->template read<long>().value() == 0x66778899aabbccdd);
+        ASSERT_EQ(input->template read<long>().value(), 0x66778899aabbccdd);
       }
 
       i++;
@@ -46,19 +46,19 @@ TEST_F(ChannelSuite, UsingFragmentedSize) {
       static int i = 0;
 
       if (i == 0) {
-        assert(input->template read<short>().value() == 0x3344);
+        ASSERT_EQ(input->template read<short>().value(), 0x3344);
       } else if (i == 1) {
-        assert(input->template read<short>().value() == 0x1122);
+        ASSERT_EQ(input->template read<short>().value(), 0x1122);
       } else if (i == 2) {
-        assert(input->template read<char>().value() == 'A');
+        ASSERT_EQ(input->template read<char>().value(), 'A');
       } else if (i == 3) {
-        assert(input->template read<short>().value() == static_cast<short>(0xccdd));
+        ASSERT_EQ(input->template read<short>().value(), static_cast<short>(0xccdd));
       } else if (i == 4) {
-        assert(input->template read<short>().value() == static_cast<short>(0xaabb));
+        ASSERT_EQ(input->template read<short>().value(), static_cast<short>(0xaabb));
       } else if (i == 5) {
-        assert(input->template read<short>().value() == static_cast<short>(0x8899));
+        ASSERT_EQ(input->template read<short>().value(), static_cast<short>(0x8899));
       } else if (i == 6) {
-        assert(input->template read<short>().value() == static_cast<short>(0x6677));
+        ASSERT_EQ(input->template read<short>().value(), static_cast<short>(0x6677));
       }
 
 
@@ -80,7 +80,7 @@ TEST_F(ChannelSuite, ReadingMoreThanNecessarySize) {
 
   auto p = poll(
     [](auto && input) {
-      assert((input->template read<long>().value() & 0x00000000ffffffff) == 0x11223344);
+      ASSERT_EQ((input->template read<long>().value() & 0x00000000ffffffff), 0x11223344);
     }, input);
 
   p();

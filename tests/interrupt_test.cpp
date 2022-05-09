@@ -21,7 +21,7 @@ TEST_F(ChannelSuite, InterruptPolling) {
   
   auto p = poll(
     [&](auto & in) mutable {
-      assert(in == input);
+      ASSERT_EQ(in, input);
     }, input);
 
   auto t = std::thread(

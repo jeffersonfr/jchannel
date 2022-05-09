@@ -1,7 +1,6 @@
 #include "jchannel/jchannel.h"
 
 #include <iostream>
-#include <cassert>
 
 #include <gtest/gtest.h>
 
@@ -32,7 +31,7 @@ TEST(ChannelSuite, Channel) {
 
     auto result = input->read<result_t>();
 
-    assert(std::string{result.value().data} == "SOMEDATA");
+    ASSERT_EQ(std::string{result.value().data}, "SOMEDATA");
   }
 }
 
@@ -60,7 +59,7 @@ TEST(ChannelSuite, ChannelWithCloseOnExec) {
 
     auto result = input->read_for(std::chrono::seconds{10});
 
-    assert(result.has_value() == false);
+    ASSERT_EQ(result.has_value(), false);
   }
 }
 

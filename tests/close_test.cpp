@@ -14,7 +14,7 @@ class ChannelSuite : public ::testing::Test {
 TEST_F(ChannelSuite, CloseChannel) {
   auto p = poll(
     [&](auto & in) mutable {
-      assert(in == input);
+      ASSERT_EQ(in, input);
     }, input, output);
 
   if (p == false) {

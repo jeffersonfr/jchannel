@@ -26,9 +26,9 @@ TEST_F(ChannelSuite, UsingExactSize) {
   output->write('A');
   output->write(static_cast<long>(0x66778899aabbccdd));
 
-  assert(input->read<int>().value() == 0x11223344);
-  assert(input->read<char>().value() == 'A');
-  assert(input->read<long>().value() == 0x66778899aabbccdd);
+  ASSERT_EQ(input->read<int>().value(), 0x11223344);
+  ASSERT_EQ(input->read<char>().value(), 'A');
+  ASSERT_EQ(input->read<long>().value(), 0x66778899aabbccdd);
 }
 
 TEST_F(ChannelSuite, UsingFragmentedSize) {
@@ -36,29 +36,29 @@ TEST_F(ChannelSuite, UsingFragmentedSize) {
   output->write("Hello, world !");
   output->write(static_cast<long>(0x66778899aabbccdd));
 
-  assert(input->read<short>().value() == 0x3344);
-  assert(input->read<short>().value() == 0x1122);
+  ASSERT_EQ(input->read<short>().value(), 0x3344);
+  ASSERT_EQ(input->read<short>().value(), 0x1122);
   
-  assert(input->read<char>().value() == 'H');
-  assert(input->read<char>().value() == 'e');
-  assert(input->read<char>().value() == 'l');
-  assert(input->read<char>().value() == 'l');
-  assert(input->read<char>().value() == 'o');
-  assert(input->read<char>().value() == ',');
-  assert(input->read<char>().value() == ' ');
-  assert(input->read<char>().value() == 'w');
-  assert(input->read<char>().value() == 'o');
-  assert(input->read<char>().value() == 'r');
-  assert(input->read<char>().value() == 'l');
-  assert(input->read<char>().value() == 'd');
-  assert(input->read<char>().value() == ' ');
-  assert(input->read<char>().value() == '!');
-  assert(input->read<char>().value() == '\0');
+  ASSERT_EQ(input->read<char>().value(), 'H');
+  ASSERT_EQ(input->read<char>().value(), 'e');
+  ASSERT_EQ(input->read<char>().value(), 'l');
+  ASSERT_EQ(input->read<char>().value(), 'l');
+  ASSERT_EQ(input->read<char>().value(), 'o');
+  ASSERT_EQ(input->read<char>().value(), ',');
+  ASSERT_EQ(input->read<char>().value(), ' ');
+  ASSERT_EQ(input->read<char>().value(), 'w');
+  ASSERT_EQ(input->read<char>().value(), 'o');
+  ASSERT_EQ(input->read<char>().value(), 'r');
+  ASSERT_EQ(input->read<char>().value(), 'l');
+  ASSERT_EQ(input->read<char>().value(), 'd');
+  ASSERT_EQ(input->read<char>().value(), ' ');
+  ASSERT_EQ(input->read<char>().value(), '!');
+  ASSERT_EQ(input->read<char>().value(), '\0');
   
-  assert(input->read<short>().value() == static_cast<short>(0xccdd));
-  assert(input->read<short>().value() == static_cast<short>(0xaabb));
-  assert(input->read<short>().value() == static_cast<short>(0x8899));
-  assert(input->read<short>().value() == static_cast<short>(0x6677));
+  ASSERT_EQ(input->read<short>().value(), static_cast<short>(0xccdd));
+  ASSERT_EQ(input->read<short>().value(), static_cast<short>(0xaabb));
+  ASSERT_EQ(input->read<short>().value(), static_cast<short>(0x8899));
+  ASSERT_EQ(input->read<short>().value(), static_cast<short>(0x6677));
 }
 
 TEST_F(NonBlockingChannelSuite, ReadingMoreThanNecessarySize) {
