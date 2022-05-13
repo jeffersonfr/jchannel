@@ -16,9 +16,6 @@ class Fifo {
       output2 = channel2.get_output();
     }
 
-    ~Fifo() {
-    }
-
     void read() {
       input1->read();
       output2->write();

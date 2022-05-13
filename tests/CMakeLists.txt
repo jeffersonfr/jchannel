@@ -9,6 +9,9 @@ FetchContent_Declare(googletest
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+option(INSTALL_GTEST "" OFF)
+option(INSTALL_GMOCK "" OFF)
+
 FetchContent_MakeAvailable(googletest)
 
 macro(module_test)

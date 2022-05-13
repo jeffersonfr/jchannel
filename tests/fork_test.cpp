@@ -12,7 +12,7 @@ TEST(ChannelSuite, Channel) {
   auto output = channel.get_output();
 
   if (int id = fork(); id == 0) { // child
-    bool r = output->get_handler().duplicate(1);
+    output->get_handler().duplicate(1);
 
     char * const args[] = {
       (char *)("/usr/bin/echo"),
@@ -41,7 +41,7 @@ TEST(ChannelSuite, ChannelWithCloseOnExec) {
   auto output = channel.get_output();
 
   if (int id = fork(); id == 0) { // child
-    bool r = output->get_handler().duplicate(1);
+    output->get_handler().duplicate(1);
 
     char * const args[] = {
       (char *)("/usr/bin/echo"),

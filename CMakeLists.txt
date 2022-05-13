@@ -7,9 +7,14 @@ endif()
 project (jchannel CXX)
 
 option(TESTS "Enable unit tests" OFF)
+option(CHECKER "Enable static code analysing" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+if (CHECKER)
+   set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,android-*,bugprone-*,clang-analyzer-*,hicpp-*,misc-*,modernize-*,portability-*)
+endif()
 
 find_package(Threads REQUIRED)
 

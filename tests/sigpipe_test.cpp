@@ -10,7 +10,7 @@ class ChannelSuite : public ::testing::Test {
 
 TEST_F(ChannelSuite, PipeError) {
   signal(SIGPIPE,
-      [](int sig) {
+      []([[maybe_unused]] int sig) {
         exit(0);
       });
 

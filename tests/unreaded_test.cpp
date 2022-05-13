@@ -20,7 +20,7 @@ TEST_F(ChannelSuite, UnreadedData) {
   int counter = 0;
 
   auto p = poll(
-    [&](auto & in) {
+    [&]([[maybe_unused]] auto & in) {
       counter++;
     }, input);
 

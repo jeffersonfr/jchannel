@@ -13,7 +13,7 @@ class ChannelSuite : public ::testing::Test {
 
 TEST_F(ChannelSuite, InterruptPolling) {
   signal(SIGALRM,
-      [](int sig) {
+      []([[maybe_unused]] int sig) {
         exit(0);
       });
 
