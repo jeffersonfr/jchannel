@@ -14,7 +14,7 @@ class ChannelSuite : public ::testing::Test {
 TEST_F(ChannelSuite, InterruptPolling) {
   signal(SIGALRM,
       []([[maybe_unused]] int sig) {
-        exit(0);
+        exit(1);
       });
 
   alarm(5);
@@ -33,11 +33,9 @@ TEST_F(ChannelSuite, InterruptPolling) {
 
   p();
 
-  if (p == true) {
-    t.join();
+  t.join();
 
+  if (p == true) {
     FAIL();
   }
-
-  t.join();
 }

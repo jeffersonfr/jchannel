@@ -29,9 +29,15 @@ TEST(ChannelSuite, Channel) {
       char data[256];
     };
 
-    auto result = input->read<result_t>();
+    auto data = input->read<result_t>();
 
-    ASSERT_EQ(std::string{result.value().data}, "SOMEDATA");
+    if (!data) {
+      FAIL();
+    }
+
+    auto result = *data;
+
+    ASSERT_EQ(strncmp(result.data, "SOMEDATA", 8), 0);
   }
 }
 
@@ -57,9 +63,11 @@ TEST(ChannelSuite, ChannelWithCloseOnExec) {
       char data[256];
     };
 
-    auto result = input->read_for(std::chrono::seconds{10});
+    auto data = input->read_for(std::chrono::seconds{10});
 
-    ASSERT_EQ(result.has_value(), false);
+    if (data) {
+      FAIL();
+    }
   }
 }
 

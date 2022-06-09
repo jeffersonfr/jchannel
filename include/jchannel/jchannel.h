@@ -431,6 +431,8 @@ namespace jchannel {
               }
             }
 
+            init_close_pipe();
+
             try {
               std::apply(
                   [&]<typename ...fArgs>(fArgs & ...args) {
@@ -443,6 +445,8 @@ namespace jchannel {
 
           ~Polling() {
             close();
+            
+            release_close_pipe();
           }
 
           operator bool() {
@@ -501,7 +505,10 @@ namespace jchannel {
 
           void close() {
             if (mEpoll > 0) {
+              char ch = 1;
+
               ::close(mEpoll);
+              ::write(mClosePipe[1], &ch, 1);
             }
 
             mEpoll = -1;
@@ -523,7 +530,27 @@ namespace jchannel {
           epoll_event mEvents[sizeof...(Args)];
           std::tuple<Args & ...> mArgs;
           CallbackRedirect mCallback;
+          int mClosePipe[2];
           int mEpoll {-1};
+
+          void init_close_pipe() {
+            if (pipe2(mClosePipe, O_CLOEXEC) < 0) {
+              throw std::runtime_error("unable to create close handled");
+            }
+
+            struct epoll_event e;
+
+            e.events = EPOLLIN;
+            e.events = e.events | EPOLLET;
+            e.data.fd = mClosePipe[0];
+
+            register_polling(e);
+          }
+
+          void release_close_pipe() {
+            ::close(mClosePipe[0]);
+            ::close(mClosePipe[1]);
+          }
 
           void register_polling(struct epoll_event & event) {
             if (epoll_ctl(mEpoll, EPOLL_CTL_ADD, event.data.fd, &event) == -1) {
@@ -533,7 +560,6 @@ namespace jchannel {
 
           void create_channel_poll(IInput * value) {
             struct epoll_event e;
-            bool packet {false};
 
             e.events = EPOLLIN;
 
@@ -548,7 +574,6 @@ namespace jchannel {
 
           void create_channel_poll(IOutput * value) {
             struct epoll_event e;
-            bool packet {false};
 
             e.events = EPOLLOUT;
 
