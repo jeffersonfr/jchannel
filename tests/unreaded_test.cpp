@@ -7,13 +7,11 @@ const int MAX_ITERATIONS = 1000;
 class ChannelSuite : public ::testing::Test {
 
   protected:
-    jchannel::Channel<jchannel::Empty> mChannel;
 
 };
 
 TEST_F(ChannelSuite, UnreadedData) {
-  auto input = mChannel.get_input();
-  auto output = mChannel.get_output();
+  auto [input, output] = jchannel::Channel<jchannel::Empty>{}.get_channels();
   
   output->write();
 

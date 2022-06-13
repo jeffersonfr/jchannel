@@ -393,6 +393,15 @@ namespace jchannel {
           return std::move(mOutput);
         }
 
+        [[nodiscard]] auto get_channels() {
+          struct result {
+            std::unique_ptr<details::Input> input;
+            std::unique_ptr<details::Output> output;
+          };
+
+          return result{std::move(mInput), std::move(mOutput)};
+        }
+
       private:
         std::unique_ptr<details::Input> mInput;
         std::unique_ptr<details::Output> mOutput;
