@@ -43,17 +43,18 @@ class ChannelSuite : public ::testing::Test {
 };
 
 TEST_F(ChannelSuite, Fifo) {
-  auto now = std::chrono::steady_clock::now();
-
   if (int id = fork(); id == 0) {
     std::this_thread::sleep_for(std::chrono::seconds{2});
 
     mFifo.read();
   } else if (id > 0) {
-    mFifo.write();
+    signal(SIGALRM,
+        []([[maybe_unused]] int sig) {
+          exit(1);
+        });
 
-    if (auto time = std::chrono::steady_clock::now() - now; time < std::chrono::seconds{2}) {
-      FAIL();
-    }
+    alarm(5);
+
+    mFifo.write();
   }
 }
