@@ -12,7 +12,7 @@ class ChannelSuite : public ::testing::Test {
 };
 
 TEST_F(ChannelSuite, CloseChannel) {
-  auto p = poll(
+  auto p = jchannel::poll(
     [&](auto & in) mutable {
       ASSERT_EQ(in, input);
     }, input, output);

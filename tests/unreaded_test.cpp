@@ -4,20 +4,14 @@
 
 const int MAX_ITERATIONS = 1000;
 
-class ChannelSuite : public ::testing::Test {
-
-  protected:
-
-};
-
-TEST_F(ChannelSuite, UnreadedData) {
+TEST(ChannelSuite, UnreadedData) {
   auto [input, output] = jchannel::Channel<jchannel::Empty>{}.get_channels();
   
   output->write();
 
   int counter = 0;
 
-  auto p = poll(
+  auto p = jchannel::poll(
     [&]([[maybe_unused]] auto & in) {
       counter++;
     }, input);

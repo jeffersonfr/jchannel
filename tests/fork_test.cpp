@@ -17,7 +17,7 @@ TEST(ChannelSuite, Channel) {
     char * const args[] = {
       (char *)("/usr/bin/echo"),
       (char *)("-n"),
-      (char *)("SOMEDATA"),
+      (char *)("SOMEDATA\nMOREDATA"),
       nullptr
     };
 
@@ -27,6 +27,10 @@ TEST(ChannelSuite, Channel) {
   } else if (id > 0) {
     struct result_t {
       char data[256];
+
+      operator char const* () const {
+        return data;
+      }
     };
 
     auto data = input->read<result_t>();
@@ -37,7 +41,7 @@ TEST(ChannelSuite, Channel) {
 
     auto result = *data;
 
-    ASSERT_EQ(strncmp(result.data, "SOMEDATA", 8), 0);
+    ASSERT_EQ(strncmp(result.get_value(), "SOMEDATA\nMOREDATA", result.get_size()), 0);
   }
 }
 

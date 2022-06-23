@@ -16,7 +16,7 @@ TEST_F(ChannelSuite, UsingExactSize) {
   output->write('A');
   output->write(static_cast<long>(0x66778899aabbccdd));
 
-  auto p = poll(
+  auto p = jchannel::poll(
     [](auto && input) {
       static int i = 0;
 
@@ -41,7 +41,7 @@ TEST_F(ChannelSuite, UsingFragmentedSize) {
   output->write('A');
   output->write(static_cast<long>(0x66778899aabbccdd));
 
-  auto p = poll(
+  auto p = jchannel::poll(
     [](auto && input) {
       static int i = 0;
 
@@ -78,9 +78,9 @@ TEST_F(ChannelSuite, UsingFragmentedSize) {
 TEST_F(ChannelSuite, ReadingMoreThanNecessarySize) {
   output->write(static_cast<int>(0x11223344));
 
-  auto p = poll(
+  auto p = jchannel::poll(
     [](auto && input) {
-      ASSERT_EQ((input->template read<long>().value() & 0x00000000ffffffff), 0x11223344);
+      ASSERT_EQ((input->template read<long>().value().get_value() & 0x00000000ffffffff), 0x11223344);
     }, input);
 
   p();

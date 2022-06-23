@@ -101,45 +101,46 @@ namespace jchannel {
 
   };
 
-  class IStream {
-
-    public:
-      virtual ~IStream() {
-      }
-
-      virtual Handler const & get_handler() const noexcept = 0;
-
-      virtual bool packet_mode_enabled() const noexcept = 0;
-
-  };
-
-  class IInput : public virtual IStream {
-
-    public:
-      virtual ~IInput() {
-      }
-
-  };
-
-  class IOutput : public virtual IStream {
-
-    public:
-      virtual ~IOutput() {
-      }
-
-  };
-
   template <typename ...Args>
     class Channel;
 
   namespace details {
 
-    class Input : public IInput {
+    class Input {
 
       template <typename ...Args>
       friend class jchannel::Channel;
 
       public:
+        template <typename T>
+          class DataValue {
+
+            public:
+              DataValue(std::size_t size, T value)
+              : mSize(size), mValue(std::move(value)) {
+              }
+
+              std::size_t get_size() const {
+                return mSize;
+              }
+
+              T & get_value() {
+                return mValue;
+              }
+
+              template <typename U>
+                requires requires (T &t, U &u) {
+                  {t == u} -> std::convertible_to<bool>;
+                }
+              bool operator == (U const &rhs) const {
+                return mValue == rhs;
+              }
+
+            private:
+              std::size_t mSize;
+              T mValue;
+          };
+
         ~Input() {
           mHandler.close();
         }
@@ -153,7 +154,7 @@ namespace jchannel {
         }
 
         template <typename T = Empty>
-          tl::expected<T, ChannelError> read() {
+          tl::expected<DataValue<T>, ChannelError> read() {
           // [[nodiscard]] expected<T, ChannelError> read() {
             T value;
             int r;
@@ -174,11 +175,11 @@ namespace jchannel {
               return tl::unexpected{ChannelError::Unknown};
             }
 
-            return value;
+            return DataValue{static_cast<std::size_t>(r), value};
           }
 
         template <typename T = Empty, class Rep, class Period>
-          tl::expected<T, ChannelError> read_for(std::chrono::duration<Rep, Period> rel_time) {
+          tl::expected<DataValue<T>, ChannelError> read_for(std::chrono::duration<Rep, Period> rel_time) {
             using namespace std::chrono;
 
             // [[nodiscard]] expected<T, ChannelError> read() {
@@ -214,7 +215,7 @@ namespace jchannel {
           }
 
         template <typename T = Empty, class Clock, class Duration>
-          tl::expected<T, ChannelError> read_until(std::chrono::time_point<Clock, Duration> const &timeout_time) {
+          tl::expected<DataValue<T>, ChannelError> read_until(std::chrono::time_point<Clock, Duration> const &timeout_time) {
             using namespace std::chrono;
 
             read_for(timeout_time - decltype(timeout_time)::now());
@@ -234,7 +235,7 @@ namespace jchannel {
 
     };
 
-    class Output : public IOutput {
+    class Output {
 
       template <typename ...Args>
       friend class jchannel::Channel;
@@ -567,7 +568,7 @@ namespace jchannel {
             }
           }
 
-          void create_channel_poll(IInput * value) {
+          void create_channel_poll(Input * value) {
             struct epoll_event e;
 
             e.events = EPOLLIN;
@@ -581,7 +582,7 @@ namespace jchannel {
             register_polling(e);
           }
 
-          void create_channel_poll(IOutput * value) {
+          void create_channel_poll(Output * value) {
             struct epoll_event e;
 
             e.events = EPOLLOUT;

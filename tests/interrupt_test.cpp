@@ -19,7 +19,7 @@ TEST_F(ChannelSuite, InterruptPolling) {
 
   alarm(5);
   
-  auto p = poll(
+  auto p = jchannel::poll(
     [&](auto & in) mutable {
       ASSERT_EQ(in, input);
     }, input);
