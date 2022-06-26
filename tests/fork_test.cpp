@@ -41,7 +41,7 @@ TEST(ChannelSuite, Channel) {
 
     auto result = *data;
 
-    ASSERT_EQ(strncmp(result.get_value(), "SOMEDATA\nMOREDATA", result.get_size()), 0);
+    ASSERT_EQ(strncmp(result, "SOMEDATA\nMOREDATA", result.get_size()), 0);
   }
 }
 

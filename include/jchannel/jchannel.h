@@ -129,6 +129,12 @@ namespace jchannel {
               }
 
               template <typename U>
+                requires std::convertible_to<T, U>
+              operator U () {
+                return static_cast<U>(mValue);
+              }
+
+              template <typename U>
                 requires requires (T &t, U &u) {
                   {t == u} -> std::convertible_to<bool>;
                 }
