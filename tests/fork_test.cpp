@@ -6,6 +6,14 @@
 
 using namespace jchannel;
 
+struct chunk : std::array<char, 256> {
+
+  operator char const * () {
+    return data();
+  }
+
+};
+
 TEST(ChannelSuite, Channel) {
   auto channel = Channel{};
   auto input = channel.get_input();
@@ -25,23 +33,13 @@ TEST(ChannelSuite, Channel) {
 
     exit(0);
   } else if (id > 0) {
-    struct result_t {
-      char data[256];
-
-      operator char const* () const {
-        return data;
-      }
-    };
-
-    auto data = input->read<result_t>();
+    auto data = input->read<chunk>();
 
     if (!data) {
       FAIL();
     }
 
-    auto result = *data;
-
-    ASSERT_EQ(strncmp(result, "SOMEDATA\nMOREDATA", result.get_size()), 0);
+    ASSERT_EQ(strncmp(*data, "SOMEDATA\nMOREDATA", data->get_size()), 0);
   }
 }
 

@@ -4,7 +4,12 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "In-source build is not allowed")
 endif()
 
-project (jchannel CXX)
+project(jchannel
+  LANGUAGES CXX
+  HOMEPAGE_URL https://github.com/jeffersonfr/jchannel
+  DESCRIPTION "A static channel implementation"
+  VERSION 1.0.0
+)
 
 option(TESTS "Enable unit tests" OFF)
 option(CHECKER "Enable static code analysing" OFF)
@@ -23,7 +28,8 @@ add_library(${PROJECT_NAME} INTERFACE
 
 target_include_directories(${PROJECT_NAME}
   INTERFACE 
-    ${PROJECT_SOURCE_DIR}/include
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include/jchannel>
   )
 
 target_link_libraries(${PROJECT_NAME}
@@ -45,7 +51,7 @@ configure_file(
 
 install(DIRECTORY include/${CMAKE_PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 
-# generate jchannel.pc
-configure_file(${PROJECT_SOURCE_DIR}/jchannel.pc.in ${PROJECT_BINARY_DIR}/jchannel.pc.gen @ONLY)
-file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/jchannel.pc INPUT "${CMAKE_BINARY_DIR}/jchannel.pc.gen")
+# generate pc file
+configure_file(jchannel.pc.in jchannel.pc @ONLY)
+
 install(FILES ${CMAKE_BINARY_DIR}/jchannel.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
