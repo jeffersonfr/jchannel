@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include<unistd.h>
+
 #include <gtest/gtest.h>
 
 using namespace jchannel;
@@ -20,7 +22,7 @@ TEST(ChannelSuite, Channel) {
   auto output = channel.get_output();
 
   if (int id = fork(); id == 0) { // child
-    output->get_handler().duplicate(1);
+    output->get_handler().duplicate(STDOUT_FILENO);
 
     char * const args[] = {
       (char *)("/usr/bin/echo"),
@@ -49,7 +51,7 @@ TEST(ChannelSuite, ChannelWithCloseOnExec) {
   auto output = channel.get_output();
 
   if (int id = fork(); id == 0) { // child
-    output->get_handler().duplicate(1);
+    output->get_handler().duplicate(STDOUT_FILENO);
 
     char * const args[] = {
       (char *)("/usr/bin/echo"),
