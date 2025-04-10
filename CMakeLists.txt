@@ -54,4 +54,4 @@ install(DIRECTORY include/${CMAKE_PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREF
 # generate pc file
 configure_file(jchannel.pc.in jchannel.pc @ONLY)
 
-install(FILES ${CMAKE_BINARY_DIR}/jchannel.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/jchannel.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
